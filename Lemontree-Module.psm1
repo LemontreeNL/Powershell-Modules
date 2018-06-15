@@ -78,71 +78,80 @@ function Get-LMTPingStatistics
 		[string]$inputfile
 	)
 	
-	$CounterTimedOut = 0
-	$CounterStreaks = 0
-	$regexDate = "(?<date>\d{1,}-\d{1,}-\d{4})\s(?<time>\d{2}:\d{2}:\d{2})"
-	$IPregex = '(?<Address>((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))'
-	$SourceServer = (Get-Content -Path $inputfile -TotalCount 1) -match "Hostname:\s(?<Source>.+)" | ForEach-Object { $matches.source }
-	[datetime]$DateStarted = (Get-Content -Path $inputfile -TotalCount 1) -match $regexDate | ForEach-Object { ('{0}-{1}-{2} {3}' -f $matches.date.split('-')[1], $matches.date.split('-')[0], $matches.date.split('-')[2], $matches.time) }
-	[datetime]$DateEnded = (Get-Content -Path $inputfile -Tail 1) -match $regexDate | ForEach-Object { ('{0}-{1}-{2} {3}' -f $matches.date.split('-')[1], $matches.date.split('-')[0], $matches.date.split('-')[2], $matches.time) }
-	$TotalDuration = New-TimeSpan -Start $DateStarted -end $DateEnded
-	
-	$properties = [ordered]@{
-		'Destination'	     = ""
-		'SourceServer'	     = $SourceServer
-		'StartTime'		     = ('{0:dd-MM HH:mm:ss}' -f $DateStarted)
-		'EndTime'		     = ('{0:dd-MM HH:mm:ss}' -f $DateEnded)
-		'TotalDuration'	     = ('{0} Days - {1} Hours, {2} Minutes, {3} Seconds' -f $TotalDuration.Days, $TotalDuration.Hours, $TotalDuration.Minutes, $TotalDuration.Seconds)
-		'TotalPings'		 = 0
-		'Succeeded'		     = 0
-		'TimedOut'		     = 0
-		'PercentLost'	     = 0
-		'LongestStreak'	     = 0
-	}
-	$object = new-object -TypeName psobject -Property $properties
-	
-	foreach ($line in [system.IO.File]::ReadLines($inputfile))
+	begin
 	{
-		if ($line -match "Request Timed Out.")
-		{
-			$line -match $regexDate | Out-Null
-			[datetime]$DateTimeout = ('{0}-{1}-{2} {3}' -f $matches.date.split('-')[1], $matches.date.split('-')[0], $matches.date.split('-')[2], $matches.time)
-			$CounterTimedOut++
-			if ($counterTimedout -eq 1)
-			{
-				$DateStart = $DateTimeout
-			}
-			$object.TimedOut++
-			$object.TotalPings++
-			if ($object.LongestStreak -lt $CounterTimedOut)
-			{
-				$object.LongestStreak = $CounterTimedOut
-			}
-			
-		}
-		if ($line -match "Reply from ")
-		{
-			
-			if ($CounterTimedOut -gt 1)
-			{
-				$CounterStreaks++
-				$object | Add-Member -MemberType NoteProperty -Name "Streak$($CounterStreaks)" -Value ('[{0:dd-MM} {1:hh:mm:ss}] :: Missed Timeouts [{2}] :: Lasted [{3}] Seconds' -f $DateStart, $DateStart, $CounterTimedout, ($CounterTimedout * 5))
-				write-host ('Streak {0}:: [{1:dd-MM} {2:hh:mm:ss}] :: Missed Timeouts [{3}] :: Lasted [{4}] Seconds' -f $CounterStreaks, $DateStart, $DateStart, $CounterTimedout, ($CounterTimedout * 5))
-				Remove-Variable datestart -ErrorAction SilentlyContinue
-			}
-			$CounterTimedOut = 0
-			$object.Succeeded++
-			$object.TotalPings++
-			$IPaddress = $line
-		}
+		$regexDate = "(?<date>\d{1,}-\d{1,}-\d{4})\s(?<time>\d{2}:\d{2}:\d{2})"
+		$IPregex = '(?<Address>((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))'
 	}
-	$IPaddress -match $IPRegex | Out-null
-	$object.Destination = $matches.address
-	$object.PercentLost = [math]::Round((($object.TimedOut * 100) / $object.TotalPings), 2)
-	
-	write-output $object
+	Process
+	{
+		$CounterTimedOut = 0
+		$CounterStreaks = 0
+		$SourceServer = (Get-Content -Path $inputfile -TotalCount 1) -match "Hostname:\s(?<Source>.+)" | ForEach-Object { $matches.source }
+		[datetime]$DateStarted = (Get-Content -Path $inputfile -TotalCount 1) -match $regexDate | ForEach-Object { ('{0}-{1}-{2} {3}' -f $matches.date.split('-')[1], $matches.date.split('-')[0], $matches.date.split('-')[2], $matches.time) }
+		[datetime]$DateEnded = (Get-Content -Path $inputfile -Tail 1) -match $regexDate | ForEach-Object { ('{0}-{1}-{2} {3}' -f $matches.date.split('-')[1], $matches.date.split('-')[0], $matches.date.split('-')[2], $matches.time) }
+		$TotalDuration = New-TimeSpan -Start $DateStarted -end $DateEnded
+		
+		$properties = [ordered]@{
+			'Destination'	     = ""
+			'SourceServer'	     = $SourceServer
+			'StartTime'		     = ('{0:dd-MM HH:mm:ss}' -f $DateStarted)
+			'EndTime'		     = ('{0:dd-MM HH:mm:ss}' -f $DateEnded)
+			'TotalDuration'	     = ('{0} Days - {1} Hours, {2} Minutes, {3} Seconds' -f $TotalDuration.Days, $TotalDuration.Hours, $TotalDuration.Minutes, $TotalDuration.Seconds)
+			'TotalPings'		 = 0
+			'Succeeded'		     = 0
+			'TimedOut'		     = 0
+			'PercentLost'	     = 0
+			'LongestStreak'	      = 0
+			'NumberofStreaks'	= 0
+		}
+		$object = new-object -TypeName psobject -Property $properties
+		
+		foreach ($line in [system.IO.File]::ReadLines($inputfile))
+		{
+			if ($line -match "Request Timed Out.")
+			{
+				$line -match $regexDate | Out-Null
+				[datetime]$DateTimeout = ('{0}-{1}-{2} {3}' -f $matches.date.split('-')[1], $matches.date.split('-')[0], $matches.date.split('-')[2], $matches.time)
+				$CounterTimedOut++
+				if ($counterTimedout -eq 1)
+				{
+					$DateStart = $DateTimeout
+				}
+				$object.TimedOut++
+				$object.TotalPings++
+				if ($object.LongestStreak -lt $CounterTimedOut)
+				{
+					$object.LongestStreak = $CounterTimedOut
+				}
+				
+			}
+			if ($line -match "Reply from ")
+			{
+				
+				if ($CounterTimedOut -gt 1)
+				{
+					$CounterStreaks++
+					
+					$object | Add-Member -MemberType NoteProperty -Name "Streak$($CounterStreaks)" -Value ('[{0:dd-MM} {1:HH:mm:ss}] :: Missed Timeouts [{2}] :: Lasted [{3}] Seconds' -f $DateStart, $DateStart, $CounterTimedout, ($CounterTimedout * 5))
+					write-host ('Streak {0}:: [{1:dd-MM} {2:HH:mm:ss}] :: Missed Timeouts [{3}] :: Lasted [{4}] Seconds' -f $CounterStreaks, $DateStart, $DateStart, $CounterTimedout, ($CounterTimedout * 5))
+					Remove-Variable datestart -ErrorAction SilentlyContinue
+				}
+				$CounterTimedOut = 0
+				$object.Succeeded++
+				$object.TotalPings++
+				$IPaddress = $line
+			}
+		}
+		$IPaddress -match $IPRegex | Out-null
+		$object.Destination = $matches.address
+		$object.PercentLost = [math]::Round((($object.TimedOut * 100) / $object.TotalPings), 2)	
+	}
+	End
+	{
+		write-output $object
+	}
 }
-
 function LMTPing
 {
 	[CmdletBinding(DefaultParameterSetName = 'IncludeLogging')]
