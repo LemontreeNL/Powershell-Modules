@@ -132,7 +132,7 @@ function Get-LMTPingStatistics
 				if ($CounterTimedOut -gt 1)
 				{
 					$CounterStreaks++
-					
+					$object.numberofstreaks++
 					$object | Add-Member -MemberType NoteProperty -Name "Streak$($CounterStreaks)" -Value ('[{0:dd-MM} {1:HH:mm:ss}] :: Missed Timeouts [{2}] :: Lasted [{3}] Seconds' -f $DateStart, $DateStart, $CounterTimedout, ($CounterTimedout * 5))
 					write-host ('Streak {0}:: [{1:dd-MM} {2:HH:mm:ss}] :: Missed Timeouts [{3}] :: Lasted [{4}] Seconds' -f $CounterStreaks, $DateStart, $DateStart, $CounterTimedout, ($CounterTimedout * 5))
 					Remove-Variable datestart -ErrorAction SilentlyContinue
