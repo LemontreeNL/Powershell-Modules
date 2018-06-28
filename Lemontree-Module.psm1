@@ -143,6 +143,19 @@ function Get-LMTPingStatistics
 				$IPaddress = $line
 			}
 		}
+		
+		#last check if there were timeouts, if script ends with timeout, that would mean it wouldn't be able to determine if it's a streak.
+		#this would only be hit if the last line wasn't ended with a success, otherwise $counterTimedout would be 0.
+		if ($CounterTimedOut -gt 1)
+			{
+				$CounterStreaks++
+				$object.numberofstreaks++
+				$object | Add-Member -MemberType NoteProperty -Name "Streak$($CounterStreaks)" -Value ('[{0:dd-MM} {1:HH:mm:ss}] :: Missed Timeouts [{2}] :: Lasted [{3}] Seconds' -f $DateStart, $DateStart, $CounterTimedout, ($CounterTimedout * 5))
+				write-host ('Streak {0}:: [{1:dd-MM} {2:HH:mm:ss}] :: Missed Timeouts [{3}] :: Lasted [{4}] Seconds' -f $CounterStreaks, $DateStart, $DateStart, $CounterTimedout, ($CounterTimedout * 5))
+				Remove-Variable datestart -ErrorAction SilentlyContinue
+			}
+
+		
 		$IPaddress -match $IPRegex | Out-null
 		$object.Destination = $matches.address
 		$object.PercentLost = [math]::Round((($object.TimedOut * 100) / $object.TotalPings), 2)	
@@ -152,6 +165,7 @@ function Get-LMTPingStatistics
 		write-output $object
 	}
 }
+
 function LMTPing
 {
 	[CmdletBinding(DefaultParameterSetName = 'IncludeLogging')]
