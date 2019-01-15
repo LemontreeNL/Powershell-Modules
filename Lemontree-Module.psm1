@@ -10,7 +10,6 @@
 	===========================================================================
 #>
 
-#This is all still a WiP.
 
 function Get-DownloadFile
 {
@@ -245,4 +244,59 @@ function Get-PublicIP
 	Invoke-RestMethod http://ipinfo.io/json
 }
 
-Export-ModuleMember -Function Get-DownloadFile, Write-Log, LMTPing, Get-PublicIP, Get-LMTPingStatistics
+function Repair-LemontreeFolders
+{
+	[CmdletBinding()]
+	param
+	(
+		[array]$Folders,
+		[string]$Root
+	)
+	
+	begin
+	{
+		#Check if Root folder is present
+		try
+		{
+			if (-not (Test-Path $Root))
+			{
+				New-Item $Root -ItemType dir -ErrorAction Stop | Out-Null
+			}
+		}
+		catch
+		{
+			Write-Output "Root folder not present, error during creation."
+			Write-Output ('ERROR :: {0}' -f $Error[0].Exception.Message)
+			Write-Output ('ERROR :: {0}' -f $Error[0].InvocationInfo)
+			break;
+		}
+	}
+	Process
+	{
+		#Checking existence of each folder, and if needed create them.
+		foreach ($Folder in $folders)
+		{
+			try
+			{
+				if (-not (Test-Path (Join-Path $Root $Folder)))
+				{
+					New-Item (Join-Path $Root $Folder) -ItemType dir -ErrorAction Stop | Out-Null
+				}
+				
+				Write-Output ('{0} is present.' -f (Join-Path $Root $Folder))
+				
+			}
+			catch
+			{
+				write-output ('Error creating {0}' -f (Join-Path $Root $Folder))
+				Write-Output ('ERROR :: {0}' -f $Error[0].Exception.Message)
+			}
+		}
+	}
+	End
+	{
+		##
+	}
+}
+
+Export-ModuleMember -Function Get-DownloadFile, Write-Log, LMTPing, Get-PublicIP, Get-LMTPingStatistics, Repair-LemontreeFolders
