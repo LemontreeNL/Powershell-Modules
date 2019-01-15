@@ -10,8 +10,6 @@
 	===========================================================================
 #>
 
-#Test Commit Powershell Studio 2019. 
-
 function Get-DownloadFile
 {
 	param
