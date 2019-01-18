@@ -298,4 +298,254 @@ function Repair-LemontreeFolders
 	}
 }
 
-Export-ModuleMember -Function Get-DownloadFile, Write-Log, LMTPing, Get-PublicIP, Get-LMTPingStatistics, Repair-LemontreeFolders
+function Join-Parts
+{
+	param
+	(
+		$Parts = $null,
+		$Separator = ''
+	)
+	
+	($Parts | ? { $_ } | % { ([string]$_).trim($Separator) } | ? { $_ }) -join $Separator
+}
+
+function Check-LmtServiceVersion
+{
+	[CmdletBinding(DefaultParameterSetName = 'LatestVersion')]
+	param
+	(
+		$VersionRootURL = 'https://lemontreenabletest.blob.core.windows.net/nablerepository/LmtSvc/',
+		$serviceName = "Lemontree Orchestrator Service",
+		$ExecutableName = "Service_Lmt_Orchestrator.exe",
+		[Parameter(ParameterSetName = 'LocalVersion',
+				   Mandatory = $true)]
+		[switch]$LocalVersion,
+		[Parameter(ParameterSetName = 'LatestVersion',
+				   Mandatory = $true)]
+		[switch]$LatestVersion
+	)
+	
+	begin
+	{
+		$VersionURL = (Join-Parts -Separator '/' -Parts $VersionRootURL, $ExecutableName)
+		
+		if (-not ($LocalVersion -or $LatestVersion))
+		{
+			Write-Output 'No Parameter set given, either specify if LocalVersion or LatestVersion is needed. Aborting script!'
+			throw;
+		}
+	}
+	Process
+	{
+		if ($LocalVersion)
+		{
+			try
+			{
+				$FullPath = (Get-WmiObject Win32_Service | ? { $_.name -like $serviceName } | select -ExpandProperty pathname).trim('"')
+				$file = Get-Item $FullPath -ErrorAction Stop
+				$Version = New-Object System.Version -ArgumentList ($file.VersionInfo.fileversion)
+				$RootPath = Split-Path $file
+			}
+			catch
+			{
+				$string = @"
+	Couldn't Determine the version of the installed service.
+
+	ERROR Message :: $($Error[0].Exception.Message)
+	ERROR Line    :: $($Error[0].InvocationInfo.Line)
+"@
+				Write-Host $string
+				throw;
+			}
+		}
+		
+		if ($LatestVersion)
+		{
+			try
+			{
+				$Version = New-Object System.Version -argumentlist (New-Object System.Net.WebClient).DownloadString($VersionURL)
+			}
+			Catch
+			{
+				$string = @"
+	Cant determine the latest version available on the internet.
+
+	ERROR Message :: $($Error[0].Exception.Message)
+	ERROR Line    :: $($Error[0].InvocationInfo.Line)
+"@
+				Write-Host $string
+				throw;
+			}
+		}
+	}
+	End
+	{
+		Write-Output $Version
+	}
+}
+
+function Update-LmtService
+{
+	[CmdletBinding()]
+	param
+	(
+		$serviceName = "Lemontree Orchestrator Service",
+		$ExecutableName = "Service_Lmt_Orchestrator.exe",
+		$IntendedPathRoot = "c:\program files\Lemontree\bin\",
+		$UpdateRootURL = 'https://lemontreenabletest.blob.core.windows.net/nablerepository/LmtSvc/'
+	)
+	
+	Begin
+	{
+		$IntendedPath = Join-Path $IntendedPathRoot $ExecutableName
+		$service = Get-Service $serviceName
+		$UpdateURL = (Join-Parts -Separator '/' -Parts $UpdateRootURL, $ExecutableName)
+		
+		if ($service)
+		{
+			#If Service is present, determine the running path and version.
+			try
+			{
+				$CurrentVersion = Check-LmtServiceVersion -LocalVersion -ErrorAction Stop
+				$FullPath = (Get-WmiObject Win32_Service | ? { $_.name -like $serviceName } | select -ExpandProperty pathname).trim('"')
+				$file = Get-Item $FullPath -ErrorAction Stop
+				$RootPath = Split-Path $file
+			}
+			catch
+			{
+				$Output = @"
+ERROR Message :: $($Error[0].Exception.Message)
+ERROR Line    :: $($Error[0].InvocationInfo.Line)
+"@
+				Write-Host $Output
+			}
+		}
+	}
+	Process
+	{
+		if ($service)
+		{
+			if ($file)
+			{
+				$LatestVersion = Check-LmtServiceVersion -LatestVersion
+				
+				if ($LatestVersion -gt $CurrentVersion)
+				{
+					$string = @"
+CurrentVersion :: $CurrentVersion
+LatestVersion :: $LatestVersion `n
+Downloading New version and installing the new service version.
+"@
+					
+					Write-Host $string
+					
+					#Stop Service and Rename current executable.
+					if ($service.Status -ne 'Stopped')
+					{
+						Stop-Service $serviceName
+					}
+					Start-Sleep 5
+					try
+					{
+						Rename-Item $FullPath -newname (Join-Path $RootPath "$($file.BaseName)_old.exe") -Force
+						
+						#Download main script to run, and run it afterwards.
+						(New-Object System.Net.WebClient).DownloadFile($UpdateURL, $FullPath)
+						
+						Start-Sleep 5
+						& $FullPath /u
+						Start-Sleep 5
+						& $FullPath /i
+						Start-Sleep 5
+					}
+					catch
+					{
+						$Output = @"
+ERROR Message :: $($Error[0].Exception.Message)
+ERROR Line    :: $($Error[0].InvocationInfo.Line)
+"@
+						
+						Write-Host $Output
+						
+					}
+					Start-Service $serviceName
+					
+				}
+				elseif ($LatestVersion -eq $CurrentVersion)
+				{
+					$string = @"
+CurrentVersion :: $CurrentVersion
+LatestVersion :: $LatestVersion `n
+
+Version is up to date.
+"@
+					
+					Write-Host $string
+				}
+			}
+			Else
+			{
+				try
+				{
+					(New-Object System.Net.WebClient).DownloadFile($UpdateURL, (Join-Path $IntendedPath $ExecutableName))
+					
+					Start-Sleep 5
+					& (Join-Path $IntendedPath $ExecutableName) /u
+					Start-Sleep 5
+					& (Join-Path $IntendedPath $ExecutableName) /i
+					Start-Sleep 5
+					
+				}
+				catch
+				{
+					$Output = @"
+ERROR Message :: $($Error[0].Exception.Message)
+ERROR Line    :: $($Error[0].InvocationInfo.Line)
+"@
+					
+					Write-Host $Output
+				}
+			}
+		}
+		Else
+		{
+			try
+			{
+				$string = @"
+No Service detected for $serviceName
+
+Installing the service.
+"@
+				
+				(New-Object System.Net.WebClient).DownloadFile($UpdateURL, $IntendedPath)
+				
+				Start-Sleep 5
+				& $IntendedPath /i
+				Start-Sleep 5
+				
+				Start-Service $serviceName
+				
+			}
+			catch
+			{
+				$Output = @"
+ERROR Message :: $($Error[0].Exception.Message)
+ERROR Line    :: $($Error[0].InvocationInfo.Line)
+"@
+				Write-Host $Output
+			}
+		}
+	}
+	End
+	{
+		$service = Get-Service $serviceName
+		if ($service.Status -ne 'Running')
+		{
+			Start-Service $serviceName
+		}
+	}
+	
+}
+
+
+Export-ModuleMember -Function Get-DownloadFile, Write-Log, LMTPing, Get-PublicIP, Get-LMTPingStatistics, Repair-LemontreeFolders, Join-Parts, Check-LmtServiceVersion, Update-LmtService
