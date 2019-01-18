@@ -9,7 +9,7 @@
 	 Module Name: Lemontree-Module
 	===========================================================================
 #>
-#
+
 function Get-DownloadFile
 {
 	param
@@ -316,7 +316,7 @@ function Check-LmtServiceVersion
 	(
 		$VersionRootURL = 'https://lemontreenabletest.blob.core.windows.net/nablerepository/LmtSvc/',
 		$serviceName = "Lemontree Orchestrator Service",
-		$ExecutableName = "Service_Lmt_Orchestrator.exe",
+		$VersionFile = 'Service_Lmt_Orchestrator_Version.txt',
 		[Parameter(ParameterSetName = 'LocalVersion',
 				   Mandatory = $true)]
 		[switch]$LocalVersion,
@@ -327,8 +327,8 @@ function Check-LmtServiceVersion
 	
 	begin
 	{
-		$VersionURL = (Join-Parts -Separator '/' -Parts $VersionRootURL, $ExecutableName)
-		
+		$VersionURL = (Join-Parts -Separator '/' -Parts $VersionRootURL, $VersionFile)
+				
 		if (-not ($LocalVersion -or $LatestVersion))
 		{
 			Write-Output 'No Parameter set given, either specify if LocalVersion or LatestVersion is needed. Aborting script!'
