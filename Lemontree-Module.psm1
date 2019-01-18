@@ -370,6 +370,7 @@ function Check-LmtServiceVersion
 				$string = @"
 	Cant determine the latest version available on the internet.
 
+	URL Requested :: $VersionURL
 	ERROR Message :: $($Error[0].Exception.Message)
 	ERROR Line    :: $($Error[0].InvocationInfo.Line)
 "@
