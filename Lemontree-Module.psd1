@@ -19,7 +19,7 @@
 	ModuleToProcess = 'Lemontree-Module.psm1'
 	
 	# Version number of this module.
-	ModuleVersion = '1.0.1.3'
+	ModuleVersion = '1.0.1.4'
 	
 	# ID used to uniquely identify this module
 	GUID = '531502de-bbb3-462c-93b9-3f31b2b04d91'
