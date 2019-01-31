@@ -248,7 +248,7 @@ function Repair-LemontreeFolders
 	[CmdletBinding()]
 	param
 	(
-		[array]$Folders = 'tmp,log,bin,xml',
+		[array]$Folders = 'tmp,log,bin,xml,scripts,module',
 		[string]$Root = 'C:\Program Files\Lemontree'
 	)
 	
