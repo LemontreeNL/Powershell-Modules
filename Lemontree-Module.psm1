@@ -10,6 +10,33 @@
 	===========================================================================
 #>
 
+function Verify-FileAgeNotOlderThen
+{
+	[CmdletBinding()]
+	param
+	(
+		[Parameter(Mandatory = $true)]
+		[ValidateScript({ test-path $_ })]
+		[string]$Path,
+		[Parameter(Mandatory = $true)]
+		[int]$MaxAgeOfFileInDays
+	)
+	
+	$File = Get-Item $Path
+	$MaxAge = (Get-date).AddDays(- $MaxAgeOfFileInDays)
+	
+	if ($File.CreationTime.DateTime -lt $MaxAge)
+	{
+		Return $true
+	}
+	Else
+	{
+		return $False
+	}
+	
+}
+
+
 function Get-DownloadFile
 {
 	param
@@ -548,5 +575,20 @@ ERROR Line    :: $($Error[0].InvocationInfo.Line)
 	
 }
 
+function Lemontree-ThirdPartyInstall
+{
+	[CmdletBinding()]
+	param (
+		[string]$AgentURL,
+		[string]$ClassicURL,
+		[string]$Destination
+	)
+	
+	
+	
+	#TODO: Place script here
+}
 
-Export-ModuleMember -Function Get-DownloadFile, Write-Log, LMTPing, Get-PublicIP, Get-LMTPingStatistics, Repair-LemontreeFolders, Join-Parts, Check-LmtServiceVersion, Update-LmtService
+
+
+Export-ModuleMember -Function Get-DownloadFile, Write-Log, LMTPing, Get-PublicIP, Get-LMTPingStatistics, Repair-LemontreeFolders, Join-Parts, Check-LmtServiceVersion, Update-LmtService, Verify-FileAgeNotOlderThen
