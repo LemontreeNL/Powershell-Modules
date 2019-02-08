@@ -25,7 +25,7 @@ function Verify-FileAgeNotOlderThen
 	$File = Get-Item $Path
 	$MaxAge = (Get-date).AddDays(- $MaxAgeOfFileInDays)
 	
-	if ($File.CreationTime.DateTime -lt $MaxAge)
+	if ($File.CreationTime -lt $MaxAge)
 	{
 		Return $true
 	}
