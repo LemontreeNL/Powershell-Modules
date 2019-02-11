@@ -48,9 +48,9 @@ function Write-EventLogLemontree
 		[string]$Message,
 		[Parameter(Mandatory = $true)]
 		[int]$EventID,
-		[ValidateSet('Information', 'Verbose', 'Error', 'Critical', 'Warning')]
+		[ValidateSet('Information', 'FailureAudit', 'Error', 'SuccessAudit', 'Warning')]
 		[string]$EntryType = 'Information',
-		[Int16]$Category,
+		[string]$Category,
 		[String]$ComputerName,
 		[Byte[]]$RawData
 	)
@@ -125,47 +125,6 @@ function Write-Log
 		if ($isError)
 		{
 			Write-Warning "[$loglevel] $(Get-Date -Format dd-MM-yyyy` ` hh:mm) :: $($spacer)$($message)`r"
-			$outmessage = "WARNING: " + $outmessage
-		}
-		Else
-		{
-			Write-Host ($outmessage) -ForegroundColor $color
-		}
-		if ($LogPath)
-		{
-			$outmessage | Out-File -FilePath $LogPath -Append
-		}
-	}
-}
-
-function Write-LogV2
-{
-	[CmdletBinding()]
-	param
-	(
-		[Parameter(Mandatory = $true,
-				   ValueFromPipeline = $true,
-				   Position = 1)]
-		[string]$message,
-		[switch]$isError,
-		[string]$color = 'Cyan',
-		[int]$loglevel = [int]$loglevel,
-		[string]$LogPath = $LogPath
-	)
-	
-	begin
-	{
-		$spacer = "   " * $loglevel
-		$outmessage = "[$loglevel] $($MyInvocation.MyCommand.Name) $(Get-Date -Format dd-MM-yyyy` ` HH:mm) :: $($spacer)$($message)`r"
-	}
-	
-	Process
-	{
-		
-		
-		if ($isError)
-		{
-			Write-Warning "[$loglevel] $(Get-Date -Format dd-MM-yyyy` ` HH:mm) :: $($spacer)$($message)`r"
 			$outmessage = "WARNING: " + $outmessage
 		}
 		Else
