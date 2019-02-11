@@ -36,6 +36,49 @@ function Verify-FileAgeNotOlderThen
 	
 }
 
+function Write-EventLogLemontree
+{
+	[CmdletBinding()]
+	param
+	(
+		[Parameter(Mandatory = $true)]
+		[string]$LogName = 'Lemontree',
+		[Parameter(Mandatory = $true)]
+		[string]$Source = 'NableAutomation',
+		[string]$Message,
+		[Parameter(Mandatory = $true)]
+		[int]$EventID,
+		[ValidateSet('Information', 'Verbose', 'Error', 'Critical', 'Warning')]
+		[string]$EntryType = 'Information',
+		[Int16]$Category,
+		[String]$ComputerName,
+		[Byte[]]$RawData
+	)
+	
+	begin
+	{
+		#check if eventlog already exists, if not we have to create new logbook and source.
+		if (-not ([System.Diagnostics.EventLog]::Exists($LogName) -and [System.Diagnostics.EventLog]::SourceExists($Source)))
+		{
+			New-EventLog -LogName $LogName -Source $Source
+		}
+	}
+	Process
+	{
+		$ParametersEventlog = @{
+			'LogName' = $LogName
+			'Source'  = $Source
+			'EventID' = $EventID
+		}
+		if ($EntryType) { $ParametersEventlog.add('EntryType', $EntryType) }
+		if ($Message) { $ParametersEventlog.add('Message', $Message) }
+		if ($Category) { $ParametersEventlog.add('Category', $Category) }
+		if ($ComputerName) { $ParametersEventlog.add('ComputerName', $ComputerName) }
+		if ($null -ne $RawData) { $ParametersEventlog.Add('RawData', $RawData) }
+		
+		Write-EventLog @ParametersEventlog
+	}
+}
 
 function Get-DownloadFile
 {
@@ -82,6 +125,47 @@ function Write-Log
 		if ($isError)
 		{
 			Write-Warning "[$loglevel] $(Get-Date -Format dd-MM-yyyy` ` hh:mm) :: $($spacer)$($message)`r"
+			$outmessage = "WARNING: " + $outmessage
+		}
+		Else
+		{
+			Write-Host ($outmessage) -ForegroundColor $color
+		}
+		if ($LogPath)
+		{
+			$outmessage | Out-File -FilePath $LogPath -Append
+		}
+	}
+}
+
+function Write-LogV2
+{
+	[CmdletBinding()]
+	param
+	(
+		[Parameter(Mandatory = $true,
+				   ValueFromPipeline = $true,
+				   Position = 1)]
+		[string]$message,
+		[switch]$isError,
+		[string]$color = 'Cyan',
+		[int]$loglevel = [int]$loglevel,
+		[string]$LogPath = $LogPath
+	)
+	
+	begin
+	{
+		$spacer = "   " * $loglevel
+		$outmessage = "[$loglevel] $($MyInvocation.MyCommand.Name) $(Get-Date -Format dd-MM-yyyy` ` HH:mm) :: $($spacer)$($message)`r"
+	}
+	
+	Process
+	{
+		
+		
+		if ($isError)
+		{
+			Write-Warning "[$loglevel] $(Get-Date -Format dd-MM-yyyy` ` HH:mm) :: $($spacer)$($message)`r"
 			$outmessage = "WARNING: " + $outmessage
 		}
 		Else
@@ -589,6 +673,4 @@ function Lemontree-ThirdPartyInstall
 	#TODO: Place script here
 }
 
-
-
-Export-ModuleMember -Function Get-DownloadFile, Write-Log, LMTPing, Get-PublicIP, Get-LMTPingStatistics, Repair-LemontreeFolders, Join-Parts, Check-LmtServiceVersion, Update-LmtService, Verify-FileAgeNotOlderThen
+Export-ModuleMember -Function Get-DownloadFile, Write-Log, LMTPing, Get-PublicIP, Get-LMTPingStatistics, Repair-LemontreeFolders, Join-Parts, Check-LmtServiceVersion, Update-LmtService, Verify-FileAgeNotOlderThen, Write-EventLogLemontree
