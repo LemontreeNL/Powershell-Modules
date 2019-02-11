@@ -19,7 +19,7 @@
 	ModuleToProcess = 'Lemontree-Module.psm1'
 	
 	# Version number of this module.
-	ModuleVersion = '1.0.1.8'
+	ModuleVersion = '1.0.1.81'
 	
 	# ID used to uniquely identify this module
 	GUID = '531502de-bbb3-462c-93b9-3f31b2b04d91'
@@ -37,7 +37,7 @@
 	Description = 'Contains some functions that can be used on a daily basis.'
 	
 	# Minimum version of the Windows PowerShell engine required by this module
-	PowerShellVersion = '2.0'
+	PowerShellVersion = '3.0'
 	
 	# Name of the Windows PowerShell host required by this module
 	PowerShellHostName = ''
@@ -46,7 +46,7 @@
 	PowerShellHostVersion = ''
 	
 	# Minimum version of the .NET Framework required by this module
-	DotNetFrameworkVersion = '2.0'
+	DotNetFrameworkVersion = '4.5'
 	
 	# Minimum version of the common language runtime (CLR) required by this module
 	CLRVersion = '2.0.50727'
