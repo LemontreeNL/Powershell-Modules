@@ -288,8 +288,8 @@ function LMTPing
 				$filename = Read-Host "Please Specify the filename for the logging. ( ex. PingGoogle.txt )"
 			}
 			
-			Write-Output ('{0} - SourceServer Hostname: {1}' -f (Get-Date -Format "dd-MM-yyyy HH:mm:ss"), $env:COMPUTERNAME) | Tee-Object -FilePath "$Path\$filename" -Append
-			ping $destination -t | ForEach-Object { "{0} - {1}" -f (Get-Date -Format "dd-MM-yyyy HH:mm:ss"), $_ } | tee-object -filepath "$Path\$filename" -append
+			Write-Output ('{0} - SourceServer Hostname: {1}' -f (Get-Date -Format "dd-MM-yyyy HH:mm:ss"), $env:COMPUTERNAME) | Tee-Object -FilePath (Join-Path $Path $filename) -Append
+			ping $destination -t | ForEach-Object { "{0} - {1}" -f (Get-Date -Format "dd-MM-yyyy HH:mm:ss"), $_ } | tee-object -filepath (Join-Path $Path $filename) -append
 		}
 		Else
 		{
@@ -300,7 +300,7 @@ function LMTPing
 	}
 	end
 	{
-		Write-Output 'Ping aborted' | Tee-Object -FilePath "$Path\$filename" -Append
+		Write-Output 'Ping aborted' | Tee-Object -FilePath (Join-Path $Path $filename) -Append
 		break;
 	}
 }
