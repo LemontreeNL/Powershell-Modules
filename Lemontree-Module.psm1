@@ -10,6 +10,20 @@
 	===========================================================================
 #>
 
+function Update-LemontreeModule
+{
+	[CmdletBinding()]
+	param
+	(
+		[string]$ModuleURL = 'https://raw.githubusercontent.com/LemontreeNL/Powershell-Modules/master/Lemontree-Module.psm1',
+		[string]$DestinationModulePath = 'C:\program files\Lemontree\module\Lemontree-Module.psm1'
+	)
+	
+	(New-Object System.Net.WebClient).DownloadFile($ModuleURL, $DestinationModulePath)
+	#TODO: Place script here
+}
+
+
 function Verify-FileAgeNotOlderThen
 {
 	[CmdletBinding()]
@@ -377,10 +391,12 @@ function Repair-LemontreeFolders
 				if (-not (Test-Path (Join-Path $Root $Folder)))
 				{
 					New-Item (Join-Path $Root $Folder) -ItemType dir -ErrorAction Stop | Out-Null
+					Write-Verbose ('{0} has been created.' -f (Join-Path $Root $Folder))
 				}
-				
-				Write-Output ('{0} is present.' -f (Join-Path $Root $Folder))
-				
+				Else
+				{
+					Write-Verbose ('{0} is already present.' -f (Join-Path $Root $Folder))
+				}
 			}
 			catch
 			{
