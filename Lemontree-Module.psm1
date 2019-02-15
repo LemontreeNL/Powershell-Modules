@@ -237,6 +237,33 @@ function Get-LMTPingStatistics
 
 function LMTPing
 {
+<#
+	.SYNOPSIS
+		Pings a destination with ability to log and show timestamps.
+	
+	.DESCRIPTION
+		A detailed description of the LMTPing function.
+	
+	.PARAMETER destination
+		Expacts a string, which can either be an IP address or a hostname.
+	
+	.PARAMETER log
+		Switch parameter that enables the logging, this makes it so the IncludeLogging parameter set will be used and the output will be shown on the console and also in the file specified.
+	
+	.PARAMETER Path
+		Path where the loggin has to be done. This folder has to be present before starting this ping.
+	
+	.PARAMETER filename
+		Filename of the file where the logging has to be done.
+	
+	.EXAMPLE
+				PS C:\> LMTPing
+				PS C:\> LMTPing -destination 8.8.8.8 -log -path 'C:\Program Files\Lemontree\log' -filename 'Ping_8.8.8.8.txt'
+	
+	.NOTES
+		Additional information about the function.
+#>
+	
 	[CmdletBinding(DefaultParameterSetName = 'IncludeLogging')]
 	param
 	(
