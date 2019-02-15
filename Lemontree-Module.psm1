@@ -20,7 +20,6 @@ function Update-LemontreeModule
 	)
 	
 	(New-Object System.Net.WebClient).DownloadFile($ModuleURL, $DestinationModulePath)
-	#TODO: Place script here
 }
 
 
