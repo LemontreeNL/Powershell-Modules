@@ -22,6 +22,10 @@ function Update-LemontreeModule
 	(New-Object System.Net.WebClient).DownloadFile($ModuleURL, $DestinationModulePath)
 }
 
+function test-moduleupdate
+{
+	Write-Host 'hahaha'
+}
 
 function Verify-FileAgeNotOlderThen
 {
@@ -674,4 +678,4 @@ function Lemontree-ThirdPartyInstall
 	#TODO: Place script here
 }
 
-Export-ModuleMember -Function Get-DownloadFile, Write-Log, LMTPing, Get-PublicIP, Get-LMTPingStatistics, Repair-LemontreeFolders, Join-Parts, Check-LmtServiceVersion, Update-LmtService, Verify-FileAgeNotOlderThen, Write-EventLogLemontree, update-lemontreemodule
+Export-ModuleMember -Function Get-DownloadFile, Write-Log, LMTPing, Get-PublicIP, Get-LMTPingStatistics, Repair-LemontreeFolders, Join-Parts, Check-LmtServiceVersion, Update-LmtService, Verify-FileAgeNotOlderThen, Write-EventLogLemontree, update-lemontreemodule, test-moduleupdate
