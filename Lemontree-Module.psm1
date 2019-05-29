@@ -166,29 +166,32 @@ function Get-LMTPingStatistics
 	}
 	Process
 	{
+		$Content = Get-Content $inputfile
+		$TempFileName = $inputfile -replace ".{4}$", ".tmp"
+		$Content | Out-File -FilePath $TempFileName
 		$CounterTimedOut = 0
 		$CounterStreaks = 0
-		$SourceServer = (Get-Content -Path $inputfile -TotalCount 1) -match "Hostname:\s(?<Source>.+)" | ForEach-Object { $matches.source }
-		[datetime]$DateStarted = (Get-Content -Path $inputfile -TotalCount 1) -match $regexDate | ForEach-Object { ('{0}-{1}-{2} {3}' -f $matches.date.split('-')[1], $matches.date.split('-')[0], $matches.date.split('-')[2], $matches.time) }
-		[datetime]$DateEnded = (Get-Content -Path $inputfile -Tail 1) -match $regexDate | ForEach-Object { ('{0}-{1}-{2} {3}' -f $matches.date.split('-')[1], $matches.date.split('-')[0], $matches.date.split('-')[2], $matches.time) }
+		$SourceServer = ($Content | Select-Object -first 1) -match "Hostname:\s(?<Source>.+)" | ForEach-Object { $matches.source }
+		[datetime]$DateStarted = ($Content | Select-Object -first 1) -match $regexDate | ForEach-Object { ('{0}-{1}-{2} {3}' -f $matches.date.split('-')[1], $matches.date.split('-')[0], $matches.date.split('-')[2], $matches.time) }
+		[datetime]$DateEnded = ($Content | Select-Object -last 1) -match $regexDate | ForEach-Object { ('{0}-{1}-{2} {3}' -f $matches.date.split('-')[1], $matches.date.split('-')[0], $matches.date.split('-')[2], $matches.time) }
 		$TotalDuration = New-TimeSpan -Start $DateStarted -end $DateEnded
 		
 		$properties = [ordered]@{
-			'Destination'	     = ""
-			'SourceServer'	     = $SourceServer
-			'StartTime'		     = ('{0:dd-MM HH:mm:ss}' -f $DateStarted)
-			'EndTime'		     = ('{0:dd-MM HH:mm:ss}' -f $DateEnded)
-			'TotalDuration'	     = ('{0} Days - {1} Hours, {2} Minutes, {3} Seconds' -f $TotalDuration.Days, $TotalDuration.Hours, $TotalDuration.Minutes, $TotalDuration.Seconds)
-			'TotalPings'		 = 0
-			'Succeeded'		     = 0
-			'TimedOut'		     = 0
-			'PercentLost'	     = 0
-			'LongestStreak'	      = 0
-			'NumberofStreaks'	= 0
+			'Destination'	  = ""
+			'SourceServer'    = $SourceServer
+			'StartTime'	      = ('{0:dd-MM HH:mm:ss}' -f $DateStarted)
+			'EndTime'		  = ('{0:dd-MM HH:mm:ss}' -f $DateEnded)
+			'TotalDuration'   = ('{0} Days - {1} Hours, {2} Minutes, {3} Seconds' -f $TotalDuration.Days, $TotalDuration.Hours, $TotalDuration.Minutes, $TotalDuration.Seconds)
+			'TotalPings'	  = 0
+			'Succeeded'	      = 0
+			'TimedOut'	      = 0
+			'PercentLost'	  = 0
+			'LongestStreak'   = 0
+			'NumberofStreaks' = 0
 		}
 		$object = new-object -TypeName psobject -Property $properties
 		
-		foreach ($line in [system.IO.File]::ReadLines($inputfile))
+		foreach ($line in [system.IO.File]::ReadLines($TempFileName))
 		{
 			if ($line -match "Request Timed Out.")
 			{
@@ -228,22 +231,23 @@ function Get-LMTPingStatistics
 		#last check if there were timeouts, if script ends with timeout, that would mean it wouldn't be able to determine if it's a streak.
 		#this would only be hit if the last line wasn't ended with a success, otherwise $counterTimedout would be 0.
 		if ($CounterTimedOut -gt 1)
-			{
-				$CounterStreaks++
-				$object.numberofstreaks++
-				$object | Add-Member -MemberType NoteProperty -Name "Streak$($CounterStreaks)" -Value ('[{0:dd-MM} {1:HH:mm:ss}] :: Missed Timeouts [{2}] :: Lasted [{3}] Seconds' -f $DateStart, $DateStart, $CounterTimedout, ($CounterTimedout * 5))
-				write-host ('Streak {0}:: [{1:dd-MM} {2:HH:mm:ss}] :: Missed Timeouts [{3}] :: Lasted [{4}] Seconds' -f $CounterStreaks, $DateStart, $DateStart, $CounterTimedout, ($CounterTimedout * 5))
-				Remove-Variable datestart -ErrorAction SilentlyContinue
-			}
-
+		{
+			$CounterStreaks++
+			$object.numberofstreaks++
+			$object | Add-Member -MemberType NoteProperty -Name "Streak$($CounterStreaks)" -Value ('[{0:dd-MM} {1:HH:mm:ss}] :: Missed Timeouts [{2}] :: Lasted [{3}] Seconds' -f $DateStart, $DateStart, $CounterTimedout, ($CounterTimedout * 5))
+			write-host ('Streak {0}:: [{1:dd-MM} {2:HH:mm:ss}] :: Missed Timeouts [{3}] :: Lasted [{4}] Seconds' -f $CounterStreaks, $DateStart, $DateStart, $CounterTimedout, ($CounterTimedout * 5))
+			Remove-Variable datestart -ErrorAction SilentlyContinue
+		}
+		
 		
 		$IPaddress -match $IPRegex | Out-null
 		$object.Destination = $matches.address
-		$object.PercentLost = [math]::Round((($object.TimedOut * 100) / $object.TotalPings), 2)	
+		$object.PercentLost = [math]::Round((($object.TimedOut * 100) / $object.TotalPings), 2)
 	}
 	End
 	{
 		write-output $object
+		Remove-Item $TempFileName -ErrorAction SilentlyContinue
 	}
 }
 
