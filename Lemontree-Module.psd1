@@ -19,7 +19,7 @@
 	ModuleToProcess = 'Lemontree-Module.psm1'
 	
 	# Version number of this module.
-	ModuleVersion = '1.0.1.81'
+	ModuleVersion = '1.0.2.0'
 	
 	# ID used to uniquely identify this module
 	GUID = '531502de-bbb3-462c-93b9-3f31b2b04d91'
@@ -31,10 +31,10 @@
 	CompanyName = ''
 	
 	# Copyright statement for this module
-	Copyright = '(c) 2018. All rights reserved.'
+	Copyright = '(c) 2019. All rights reserved.'
 	
 	# Description of the functionality provided by this module
-	Description = 'Contains some functions that can be used on a daily basis.'
+	Description = 'This is intended for Lemontree Use only. USE EVERYTHING AT YOUR OWN RISK! I can not imagine this has any use for anyone besides the employees of Lemontree.'
 	
 	# Minimum version of the Windows PowerShell engine required by this module
 	PowerShellVersion = '3.0'
