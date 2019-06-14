@@ -677,4 +677,29 @@ function Lemontree-ThirdPartyInstall
 	#TODO: Place script here
 }
 
+function Write-LemontreeError
+{
+<#
+	.SYNOPSIS
+		Writes error message in a short and descriptive way.
+	
+	.DESCRIPTION
+		A detailed description of the Write-LemontreeError function.
+	
+	.EXAMPLE
+				PS C:\> Write-LemontreeError
+	
+	.NOTES
+		Additional information about the function.
+#>
+	
+	$WriteERROR = @"
+ERROR Message :: $($Error[0].Exception.Message)
+ERROR Line    :: $($Error[0].InvocationInfo.Line)
+"@
+	write-host $WriteERROR
+	
+}
+
+
 Export-ModuleMember -Function Get-DownloadFile, Write-Log, LMTPing, Get-PublicIP, Get-LMTPingStatistics, Repair-LemontreeFolders, Join-Parts, Check-LmtServiceVersion, Update-LmtService, Verify-FileAgeNotOlderThen, Write-EventLogLemontree, update-lemontreemodule
