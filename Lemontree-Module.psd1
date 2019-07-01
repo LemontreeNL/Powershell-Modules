@@ -16,10 +16,10 @@
 @{
 	
 	# Script module or binary module file associated with this manifest
-	ModuleToProcess = 'Lemontree-Module.psm1'
+	RootModule = 'Lemontree-Module.psm1'
 	
 	# Version number of this module.
-	ModuleVersion = '1.0.2.0'
+	ModuleVersion = '1.0.2.2'
 	
 	# ID used to uniquely identify this module
 	GUID = '531502de-bbb3-462c-93b9-3f31b2b04d91'

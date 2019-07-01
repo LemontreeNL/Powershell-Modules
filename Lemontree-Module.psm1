@@ -10,18 +10,6 @@
 	===========================================================================
 #>
 
-function Update-LemontreeModule
-{
-	[CmdletBinding()]
-	param
-	(
-		[string]$ModuleURL = 'https://raw.githubusercontent.com/LemontreeNL/Powershell-Modules/master/Lemontree-Module.psm1',
-		[string]$DestinationModulePath = 'C:\program files\Lemontree\module\Lemontree-Module.psm1'
-	)
-	
-	(New-Object System.Net.WebClient).DownloadFile($ModuleURL, $DestinationModulePath)
-}
-
 function Verify-FileAgeNotOlderThen
 {
 	[CmdletBinding()]
@@ -663,20 +651,6 @@ ERROR Line    :: $($Error[0].InvocationInfo.Line)
 	
 }
 
-function Lemontree-ThirdPartyInstall
-{
-	[CmdletBinding()]
-	param (
-		[string]$AgentURL,
-		[string]$ClassicURL,
-		[string]$Destination
-	)
-	
-	
-	
-	#TODO: Place script here
-}
-
 function Write-LemontreeError
 {
 <#
@@ -694,12 +668,14 @@ function Write-LemontreeError
 #>
 	
 	$WriteERROR = @"
-ERROR Message :: $($Error[0].Exception.Message)
-ERROR Line    :: $($Error[0].InvocationInfo.Line)
+
+ERROR Message :: $($global:Error[0].Exception.Message)
+ERROR Line    :: $($global:Error[0].InvocationInfo.Line)
+
 "@
-	write-host $WriteERROR
+	Write-Log $WriteERROR
 	
 }
 
 
-Export-ModuleMember -Function Get-DownloadFile, Write-Log, LMTPing, Get-PublicIP, Get-LMTPingStatistics, Repair-LemontreeFolders, Join-Parts, Check-LmtServiceVersion, Update-LmtService, Verify-FileAgeNotOlderThen, Write-EventLogLemontree, update-lemontreemodule, Write-LemontreeError
+Export-ModuleMember -Function Get-DownloadFile, Write-Log, LMTPing, Get-PublicIP, Get-LMTPingStatistics, Repair-LemontreeFolders, Join-Parts, Verify-FileAgeNotOlderThen, Write-EventLogLemontree, Write-LemontreeError
