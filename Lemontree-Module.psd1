@@ -19,7 +19,7 @@
 	RootModule = 'Lemontree-Module.psm1'
 	
 	# Version number of this module.
-	ModuleVersion = '1.0.2.2'
+	ModuleVersion = '1.0.2.5'
 	
 	# ID used to uniquely identify this module
 	GUID = '531502de-bbb3-462c-93b9-3f31b2b04d91'
@@ -28,7 +28,7 @@
 	Author = 'Jordy de Rooij'
 	
 	# Company or vendor of this module
-	CompanyName = ''
+	CompanyName = 'Lemontree'
 	
 	# Copyright statement for this module
 	Copyright = '(c) 2019. All rights reserved.'
@@ -76,7 +76,8 @@
 	NestedModules = @()
 	
 	# Functions to export from this module
-	FunctionsToExport = '*' #For performance, list functions explicitly
+	#For performance, list functions explicitly
+	FunctionsToExport = "Get-DownloadFile", "Write-Log", "LMTPing", "Get-PublicIP", "Get-LMTPingStatistics", "Repair-LemontreeFolders", "Join-Parts", "Verify-FileAgeNotOlderThen", "Write-EventLogLemontree", "Write-LemontreeError", "ConvertTo-Hashtable"
 	
 	# Cmdlets to export from this module
 	CmdletsToExport = '*' 
