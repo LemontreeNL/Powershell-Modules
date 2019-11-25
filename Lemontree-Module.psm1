@@ -756,7 +756,7 @@ function Install-MsiFile
 		"/L*v"
 		$logFile
 	)
-	#Start-Process "msiexec.exe" -ArgumentList $MSIArguments -Wait -NoNewWindow
+	Start-Process "msiexec.exe" -ArgumentList $MSIArguments -Wait -NoNewWindow
 }
 
 Export-ModuleMember -Function Get-DownloadFile, Write-Log, LMTPing, Get-PublicIP, Get-LMTPingStatistics, Repair-LemontreeFolders, Join-Parts, Verify-FileAgeNotOlderThen, Write-EventLogLemontree, Write-LemontreeError, ConvertTo-Hashtable
