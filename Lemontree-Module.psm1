@@ -10,34 +10,29 @@
 	===========================================================================
 #>
 
-function Verify-FileAgeNotOlderThen
-{
+function Verify-FileAgeNotOlderThen {
 	[CmdletBinding()]
 	param
 	(
 		[Parameter(Mandatory = $true)]
-		[ValidateScript({ test-path $_ })]
+		[ValidateScript( { Test-Path $_ })]
 		[string]$Path,
 		[Parameter(Mandatory = $true)]
 		[int]$MaxAgeOfFileInDays
 	)
 	
 	$File = Get-Item $Path
-	$MaxAge = (Get-date).AddDays(- $MaxAgeOfFileInDays)
+	$MaxAge = (Get-Date).AddDays(- $MaxAgeOfFileInDays)
 	
-	if ($File.CreationTime -lt $MaxAge)
-	{
+	if ($File.CreationTime -lt $MaxAge) {
 		Return $true
-	}
-	Else
-	{
+	} Else {
 		return $False
 	}
 	
 }
 
-function Write-EventLogLemontree
-{
+function Write-EventLogLemontree {
 	[CmdletBinding()]
 	param
 	(
@@ -55,16 +50,13 @@ function Write-EventLogLemontree
 		[Byte[]]$RawData
 	)
 	
-	begin
-	{
+	begin {
 		#check if eventlog already exists, if not we have to create new logbook and source.
-		if (-not ([System.Diagnostics.EventLog]::Exists($LogName) -and [System.Diagnostics.EventLog]::SourceExists($Source)))
-		{
+		if (-not ([System.Diagnostics.EventLog]::Exists($LogName) -and [System.Diagnostics.EventLog]::SourceExists($Source))) {
 			New-EventLog -LogName $LogName -Source $Source
 		}
 	}
-	Process
-	{
+	Process {
 		$ParametersEventlog = @{
 			'LogName' = $LogName
 			'Source'  = $Source
@@ -80,8 +72,7 @@ function Write-EventLogLemontree
 	}
 }
 
-function Get-DownloadFile
-{
+function Get-DownloadFile {
 	param
 	(
 		[Parameter(Mandatory = $true)]
@@ -97,14 +88,13 @@ function Get-DownloadFile
 	Write-Output ('Time Taken: {0} second(s)' -f $((Get-Date).Subtract($StartTime).Seconds))
 }
 
-function Write-Log
-{
+function Write-Log {
 	[CmdletBinding()]
 	param
 	(
 		[Parameter(Mandatory = $true,
-				   ValueFromPipeline = $true,
-				   Position = 1)]
+			ValueFromPipeline = $true,
+			Position = 1)]
 		[string]$message,
 		[switch]$isError,
 		[string]$color = 'Cyan',
@@ -112,34 +102,27 @@ function Write-Log
 		[string]$LogPath = $LogPath
 	)
 	
-	begin
-	{
+	begin {
 		$spacer = "   " * $loglevel
 		$outmessage = "[$loglevel] $(Get-Date -Format dd-MM-yyyy` ` hh:mm) :: $($spacer)$($message)`r"
 	}
 	
-	Process
-	{
+	Process {
 		
 		
-		if ($isError)
-		{
+		if ($isError) {
 			Write-Warning "[$loglevel] $(Get-Date -Format dd-MM-yyyy` ` hh:mm) :: $($spacer)$($message)`r"
 			$outmessage = "WARNING: " + $outmessage
-		}
-		Else
-		{
+		} Else {
 			Write-Host ($outmessage) -ForegroundColor $color
 		}
-		if ($LogPath)
-		{
+		if ($LogPath) {
 			$outmessage | Out-File -FilePath $LogPath -Append
 		}
 	}
 }
 
-function Get-LMTPingStatistics
-{
+function Get-LMTPingStatistics {
 	[CmdletBinding()]
 	param
 	(
@@ -147,13 +130,11 @@ function Get-LMTPingStatistics
 		[string]$inputfile
 	)
 	
-	begin
-	{
+	begin {
 		$regexDate = "(?<date>\d{1,}-\d{1,}-\d{4})\s(?<time>\d{2}:\d{2}:\d{2})"
 		$IPregex = '(?<Address>((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))'
 	}
-	Process
-	{
+	Process {
 		$Content = Get-Content $inputfile
 		$TempFileName = $inputfile -replace ".{4}$", ".tmp"
 		$Content | Out-File -FilePath $TempFileName
@@ -165,48 +146,42 @@ function Get-LMTPingStatistics
 		$TotalDuration = New-TimeSpan -Start $DateStarted -end $DateEnded
 		
 		$properties = [ordered]@{
-			'Destination'	  = ""
+			'Destination'     = ""
 			'SourceServer'    = $SourceServer
-			'StartTime'	      = ('{0:dd-MM HH:mm:ss}' -f $DateStarted)
-			'EndTime'		  = ('{0:dd-MM HH:mm:ss}' -f $DateEnded)
+			'StartTime'       = ('{0:dd-MM HH:mm:ss}' -f $DateStarted)
+			'EndTime'         = ('{0:dd-MM HH:mm:ss}' -f $DateEnded)
 			'TotalDuration'   = ('{0} Days - {1} Hours, {2} Minutes, {3} Seconds' -f $TotalDuration.Days, $TotalDuration.Hours, $TotalDuration.Minutes, $TotalDuration.Seconds)
-			'TotalPings'	  = 0
-			'Succeeded'	      = 0
-			'TimedOut'	      = 0
-			'PercentLost'	  = 0
+			'TotalPings'      = 0
+			'Succeeded'       = 0
+			'TimedOut'        = 0
+			'PercentLost'     = 0
 			'LongestStreak'   = 0
 			'NumberofStreaks' = 0
 		}
-		$object = new-object -TypeName psobject -Property $properties
+		$object = New-Object -TypeName psobject -Property $properties
 		
-		foreach ($line in [system.IO.File]::ReadLines($TempFileName))
-		{
-			if ($line -match "Request Timed Out.")
-			{
+		foreach ($line in [system.IO.File]::ReadLines($TempFileName)) {
+			if ($line -match "Request Timed Out.") {
 				$line -match $regexDate | Out-Null
 				[datetime]$DateTimeout = ('{0}-{1}-{2} {3}' -f $matches.date.split('-')[1], $matches.date.split('-')[0], $matches.date.split('-')[2], $matches.time)
 				$CounterTimedOut++
-				if ($counterTimedout -eq 1)
-				{
+				if ($counterTimedout -eq 1) {
 					$DateStart = $DateTimeout
 				}
 				$object.TimedOut++
 				$object.TotalPings++
-				if ($object.LongestStreak -lt $CounterTimedOut)
-				{
+				if ($object.LongestStreak -lt $CounterTimedOut) {
 					$object.LongestStreak = $CounterTimedOut
 				}
 				
 			}
-			if ($line -match "Reply from ")
-			{
+			if ($line -match "Reply from ") {
 				
-				if ($CounterTimedOut -gt 1)
-				{
+				if ($CounterTimedOut -gt 1) {
 					$CounterStreaks++
 					$object.numberofstreaks++
 					$object | Add-Member -MemberType NoteProperty -Name "Streak$($CounterStreaks)" -Value ('[{0:dd-MM} {1:HH:mm:ss}] :: Missed Timeouts [{2}] :: Lasted [{3}] Seconds' -f $DateStart, $DateStart, $CounterTimedout, ($CounterTimedout * 5))
-					write-host ('Streak {0}:: [{1:dd-MM} {2:HH:mm:ss}] :: Missed Timeouts [{3}] :: Lasted [{4}] Seconds' -f $CounterStreaks, $DateStart, $DateStart, $CounterTimedout, ($CounterTimedout * 5))
+					Write-Host ('Streak {0}:: [{1:dd-MM} {2:HH:mm:ss}] :: Missed Timeouts [{3}] :: Lasted [{4}] Seconds' -f $CounterStreaks, $DateStart, $DateStart, $CounterTimedout, ($CounterTimedout * 5))
 					Remove-Variable datestart -ErrorAction SilentlyContinue
 				}
 				$CounterTimedOut = 0
@@ -218,30 +193,27 @@ function Get-LMTPingStatistics
 		
 		#last check if there were timeouts, if script ends with timeout, that would mean it wouldn't be able to determine if it's a streak.
 		#this would only be hit if the last line wasn't ended with a success, otherwise $counterTimedout would be 0.
-		if ($CounterTimedOut -gt 1)
-		{
+		if ($CounterTimedOut -gt 1) {
 			$CounterStreaks++
 			$object.numberofstreaks++
 			$object | Add-Member -MemberType NoteProperty -Name "Streak$($CounterStreaks)" -Value ('[{0:dd-MM} {1:HH:mm:ss}] :: Missed Timeouts [{2}] :: Lasted [{3}] Seconds' -f $DateStart, $DateStart, $CounterTimedout, ($CounterTimedout * 5))
-			write-host ('Streak {0}:: [{1:dd-MM} {2:HH:mm:ss}] :: Missed Timeouts [{3}] :: Lasted [{4}] Seconds' -f $CounterStreaks, $DateStart, $DateStart, $CounterTimedout, ($CounterTimedout * 5))
+			Write-Host ('Streak {0}:: [{1:dd-MM} {2:HH:mm:ss}] :: Missed Timeouts [{3}] :: Lasted [{4}] Seconds' -f $CounterStreaks, $DateStart, $DateStart, $CounterTimedout, ($CounterTimedout * 5))
 			Remove-Variable datestart -ErrorAction SilentlyContinue
 		}
 		
 		
-		$IPaddress -match $IPRegex | Out-null
+		$IPaddress -match $IPRegex | Out-Null
 		$object.Destination = $matches.address
 		$object.PercentLost = [math]::Round((($object.TimedOut * 100) / $object.TotalPings), 2)
 	}
-	End
-	{
-		write-output $object
+	End {
+		Write-Output $object
 		Remove-Item $TempFileName -ErrorAction SilentlyContinue
 	}
 }
 
-function LMTPing
-{
-<#
+function LMTPing {
+	<#
 	.SYNOPSIS
 		Pings a destination with ability to log and show timestamps.
 	
@@ -272,7 +244,7 @@ function LMTPing
 	param
 	(
 		[Parameter(Mandatory = $true,
-				   Position = 1)]
+			Position = 1)]
 		[string]$destination = (Read-Host "Specify destination host name or IP address"),
 		[Parameter(ParameterSetName = 'IncludeLogging')]
 		[switch]$log,
@@ -282,31 +254,22 @@ function LMTPing
 		[string]$filename
 	)
 	
-	begin
-	{
+	begin {
 		
 	}
-	Process
-	{
-		if ($log)
-		{
+	Process {
+		if ($log) {
 			
-			if ($Path)
-			{
+			if ($Path) {
 				$testpath = Test-Path $Path
-				if (!($testpath))
-				{
-					Do
-					{
+				if (!($testpath)) {
+					Do {
 						$Path = Read-Host "Please Specify the path for your logs? ( ex. 'C:\Temp' )"
 					}
 					Until ((Test-Path $Path) -eq $true)
 				}
-			}
-			Else
-			{
-				Do
-				{
+			} Else {
+				Do {
 					$Path = Read-Host "Please Specify the path for your logs? ( ex. 'C:\Temp' )"
 				}
 				Until ((Test-Path $Path) -eq $true)
@@ -314,38 +277,32 @@ function LMTPing
 			}
 			
 			
-			if (!($filename))
-			{
+			if (!($filename)) {
 				$filename = Read-Host "Please Specify the filename for the logging. ( ex. PingGoogle.txt )"
 			}
 			
 			Write-Output ('{0} - SourceServer Hostname: {1}' -f (Get-Date -Format "dd-MM-yyyy HH:mm:ss"), $env:COMPUTERNAME) | Tee-Object -FilePath (Join-Path $Path $filename) -Append
-			ping $destination -t | ForEach-Object { "{0} - {1}" -f (Get-Date -Format "dd-MM-yyyy HH:mm:ss"), $_ } | tee-object -filepath (Join-Path $Path $filename) -append
-		}
-		Else
-		{
+			ping $destination -t | ForEach-Object { "{0} - {1}" -f (Get-Date -Format "dd-MM-yyyy HH:mm:ss"), $_ } | Tee-Object -filepath (Join-Path $Path $filename) -append
+		} Else {
 			ping $destination -t | ForEach-Object { "{0} - {1}" -f (Get-Date -Format "dd-MM-yyyy HH:mm:ss"), $_ }
 		}
 		
 		
 	}
-	end
-	{
+	end {
 		Write-Output 'Ping aborted' | Tee-Object -FilePath (Join-Path $Path $filename) -Append
 		break;
 	}
 }
 
-function Get-PublicIP
-{
+function Get-PublicIP {
 	[CmdletBinding()]
 	param ()
 	
 	Invoke-RestMethod http://ipinfo.io/json
 }
 
-function Repair-LemontreeFolders
-{
+function Repair-LemontreeFolders {
 	[CmdletBinding()]
 	param
 	(
@@ -353,67 +310,51 @@ function Repair-LemontreeFolders
 		[string]$Root = 'C:\Program Files\Lemontree'
 	)
 	
-	begin
-	{
+	begin {
 		#Check if Root folder is present
-		try
-		{
-			if (-not (Test-Path $Root))
-			{
+		try {
+			if (-not (Test-Path $Root)) {
 				New-Item $Root -ItemType dir -ErrorAction Stop | Out-Null
 			}
-		}
-		catch
-		{
+		} catch {
 			Write-Output "Root folder not present, error during creation."
 			Write-Output ('ERROR :: {0}' -f $Error[0].Exception.Message)
 			Write-Output ('ERROR :: {0}' -f $Error[0].InvocationInfo)
 			break;
 		}
 	}
-	Process
-	{
+	Process {
 		#Checking existence of each folder, and if needed create them.
-		foreach ($Folder in $folders)
-		{
-			try
-			{
-				if (-not (Test-Path (Join-Path $Root $Folder)))
-				{
+		foreach ($Folder in $folders) {
+			try {
+				if (-not (Test-Path (Join-Path $Root $Folder))) {
 					New-Item (Join-Path $Root $Folder) -ItemType dir -ErrorAction Stop | Out-Null
 					Write-Verbose ('{0} has been created.' -f (Join-Path $Root $Folder))
-				}
-				Else
-				{
+				} Else {
 					Write-Verbose ('{0} is already present.' -f (Join-Path $Root $Folder))
 				}
-			}
-			catch
-			{
-				write-output ('Error creating {0}' -f (Join-Path $Root $Folder))
+			} catch {
+				Write-Output ('Error creating {0}' -f (Join-Path $Root $Folder))
 				Write-Output ('ERROR :: {0}' -f $Error[0].Exception.Message)
 			}
 		}
 	}
-	End
-	{
+	End {
 		##
 	}
 }
 
-function Join-Parts
-{
+function Join-Parts {
 	param
 	(
 		$Parts = $null,
 		$Separator = ''
 	)
 	
-	($Parts | ? { $_ } | % { ([string]$_).trim($Separator) } | ? { $_ }) -join $Separator
+	($Parts | Where-Object { $_ } | ForEach-Object { ([string]$_).trim($Separator) } | Where-Object { $_ }) -join $Separator
 }
 
-function Check-LmtServiceVersion
-{
+function Check-LmtServiceVersion {
 	[CmdletBinding(DefaultParameterSetName = 'LatestVersion')]
 	param
 	(
@@ -421,36 +362,29 @@ function Check-LmtServiceVersion
 		$serviceName = "Lemontree Orchestrator Service",
 		$VersionFile = 'Service_Lmt_Orchestrator_Version.txt',
 		[Parameter(ParameterSetName = 'LocalVersion',
-				   Mandatory = $true)]
+			Mandatory = $true)]
 		[switch]$LocalVersion,
 		[Parameter(ParameterSetName = 'LatestVersion',
-				   Mandatory = $true)]
+			Mandatory = $true)]
 		[switch]$LatestVersion
 	)
 	
-	begin
-	{
+	begin {
 		$VersionURL = (Join-Parts -Separator '/' -Parts $VersionRootURL, $VersionFile)
 				
-		if (-not ($LocalVersion -or $LatestVersion))
-		{
+		if (-not ($LocalVersion -or $LatestVersion)) {
 			Write-Output 'No Parameter set given, either specify if LocalVersion or LatestVersion is needed. Aborting script!'
 			throw;
 		}
 	}
-	Process
-	{
-		if ($LocalVersion)
-		{
-			try
-			{
-				$FullPath = (Get-WmiObject Win32_Service | ? { $_.name -like $serviceName } | select -ExpandProperty pathname).trim('"')
+	Process {
+		if ($LocalVersion) {
+			try {
+				$FullPath = (Get-WmiObject Win32_Service | Where-Object { $_.name -like $serviceName } | Select-Object -ExpandProperty pathname).trim('"')
 				$file = Get-Item $FullPath -ErrorAction Stop
 				$Version = New-Object System.Version -ArgumentList ($file.VersionInfo.fileversion)
 				$RootPath = Split-Path $file
-			}
-			catch
-			{
+			} catch {
 				$string = @"
 	Couldn't Determine the version of the installed service.
 
@@ -462,14 +396,10 @@ function Check-LmtServiceVersion
 			}
 		}
 		
-		if ($LatestVersion)
-		{
-			try
-			{
+		if ($LatestVersion) {
+			try {
 				$Version = New-Object System.Version -argumentlist (New-Object System.Net.WebClient).DownloadString($VersionURL)
-			}
-			Catch
-			{
+			} Catch {
 				$string = @"
 	Cant determine the latest version available on the internet.
 
@@ -482,14 +412,12 @@ function Check-LmtServiceVersion
 			}
 		}
 	}
-	End
-	{
+	End {
 		Write-Output $Version
 	}
 }
 
-function Update-LmtService
-{
+function Update-LmtService {
 	[CmdletBinding()]
 	param
 	(
@@ -499,24 +427,19 @@ function Update-LmtService
 		$UpdateRootURL = 'https://lemontreenabletest.blob.core.windows.net/nablerepository/LmtSvc/'
 	)
 	
-	Begin
-	{
+	Begin {
 		$IntendedPath = Join-Path $IntendedPathRoot $ExecutableName
 		$service = Get-Service $serviceName
 		$UpdateURL = (Join-Parts -Separator '/' -Parts $UpdateRootURL, $ExecutableName)
 		
-		if ($service)
-		{
+		if ($service) {
 			#If Service is present, determine the running path and version.
-			try
-			{
+			try {
 				$CurrentVersion = Check-LmtServiceVersion -LocalVersion -ErrorAction Stop
-				$FullPath = (Get-WmiObject Win32_Service | ? { $_.name -like $serviceName } | select -ExpandProperty pathname).trim('"')
+				$FullPath = (Get-WmiObject Win32_Service | Where-Object { $_.name -like $serviceName } | Select-Object -ExpandProperty pathname).trim('"')
 				$file = Get-Item $FullPath -ErrorAction Stop
 				$RootPath = Split-Path $file
-			}
-			catch
-			{
+			} catch {
 				$Output = @"
 ERROR Message :: $($Error[0].Exception.Message)
 ERROR Line    :: $($Error[0].InvocationInfo.Line)
@@ -525,16 +448,12 @@ ERROR Line    :: $($Error[0].InvocationInfo.Line)
 			}
 		}
 	}
-	Process
-	{
-		if ($service)
-		{
-			if ($file)
-			{
+	Process {
+		if ($service) {
+			if ($file) {
 				$LatestVersion = Check-LmtServiceVersion -LatestVersion
 				
-				if ($LatestVersion -gt $CurrentVersion)
-				{
+				if ($LatestVersion -gt $CurrentVersion) {
 					$string = @"
 CurrentVersion :: $CurrentVersion
 LatestVersion :: $LatestVersion `n
@@ -544,13 +463,11 @@ Downloading New version and installing the new service version.
 					Write-Host $string
 					
 					#Stop Service and Rename current executable.
-					if ($service.Status -ne 'Stopped')
-					{
+					if ($service.Status -ne 'Stopped') {
 						Stop-Service $serviceName
 					}
 					Start-Sleep 5
-					try
-					{
+					try {
 						Rename-Item $FullPath -newname (Join-Path $RootPath "$($file.BaseName)_old.exe") -Force
 						
 						#Download main script to run, and run it afterwards.
@@ -561,9 +478,7 @@ Downloading New version and installing the new service version.
 						Start-Sleep 5
 						& $FullPath /i
 						Start-Sleep 5
-					}
-					catch
-					{
+					} catch {
 						$Output = @"
 ERROR Message :: $($Error[0].Exception.Message)
 ERROR Line    :: $($Error[0].InvocationInfo.Line)
@@ -574,9 +489,7 @@ ERROR Line    :: $($Error[0].InvocationInfo.Line)
 					}
 					Start-Service $serviceName
 					
-				}
-				elseif ($LatestVersion -eq $CurrentVersion)
-				{
+				} elseif ($LatestVersion -eq $CurrentVersion) {
 					$string = @"
 CurrentVersion :: $CurrentVersion
 LatestVersion :: $LatestVersion `n
@@ -586,11 +499,8 @@ Version is up to date.
 					
 					Write-Host $string
 				}
-			}
-			Else
-			{
-				try
-				{
+			} Else {
+				try {
 					(New-Object System.Net.WebClient).DownloadFile($UpdateURL, (Join-Path $IntendedPath $ExecutableName))
 					
 					Start-Sleep 5
@@ -599,9 +509,7 @@ Version is up to date.
 					& (Join-Path $IntendedPath $ExecutableName) /i
 					Start-Sleep 5
 					
-				}
-				catch
-				{
+				} catch {
 					$Output = @"
 ERROR Message :: $($Error[0].Exception.Message)
 ERROR Line    :: $($Error[0].InvocationInfo.Line)
@@ -610,11 +518,8 @@ ERROR Line    :: $($Error[0].InvocationInfo.Line)
 					Write-Host $Output
 				}
 			}
-		}
-		Else
-		{
-			try
-			{
+		} Else {
+			try {
 				$string = @"
 No Service detected for $serviceName
 
@@ -629,9 +534,7 @@ Installing the service.
 				
 				Start-Service $serviceName
 				
-			}
-			catch
-			{
+			} catch {
 				$Output = @"
 ERROR Message :: $($Error[0].Exception.Message)
 ERROR Line    :: $($Error[0].InvocationInfo.Line)
@@ -640,20 +543,17 @@ ERROR Line    :: $($Error[0].InvocationInfo.Line)
 			}
 		}
 	}
-	End
-	{
+	End {
 		$service = Get-Service $serviceName
-		if ($service.Status -ne 'Running')
-		{
+		if ($service.Status -ne 'Running') {
 			Start-Service $serviceName
 		}
 	}
 	
 }
 
-function Write-LemontreeError
-{
-<#
+function Write-LemontreeError {
+	<#
 	.SYNOPSIS
 		Writes error message in a short and descriptive way.
 	
@@ -677,8 +577,7 @@ ERROR Line    :: $($global:Error[0].InvocationInfo.Line)
 	
 }
 
-function ConvertTo-Hashtable
-{
+function ConvertTo-Hashtable {
 	#Function was copied from: https://4sysops.com/archives/convert-json-to-a-powershell-hash-table/
 	
 	[CmdletBinding()]
@@ -688,20 +587,17 @@ function ConvertTo-Hashtable
 		$InputObject
 	)
 	
-	process
-	{
+	process {
 		## Return null if the input is null. This can happen when calling the function
 		## recursively and a property is null
-		if ($null -eq $InputObject)
-		{
+		if ($null -eq $InputObject) {
 			return $null
 		}
 		
 		## Check if the input is an array or collection. If so, we also need to convert
 		## those types into hash tables as well. This function will convert all child
 		## objects into hash tables (if applicable)
-		if ($InputObject -is [System.Collections.IEnumerable] -and $InputObject -isnot [string])
-		{
+		if ($InputObject -is [System.Collections.IEnumerable] -and $InputObject -isnot [string]) {
 			$collection = @(
 				foreach ($object in $InputObject) {
 					ConvertTo-Hashtable -InputObject $object
@@ -710,9 +606,7 @@ function ConvertTo-Hashtable
 			
 			## Return the array but don't enumerate it because the object may be pretty complex
 			Write-Output -NoEnumerate $collection
-		}
-		elseif ($InputObject -is [psobject])
-		{
+		} elseif ($InputObject -is [psobject]) {
 			## If the object has properties that need enumeration
 			## Convert it to its own hash table and return it
 			$hash = @{ }
@@ -720,9 +614,7 @@ function ConvertTo-Hashtable
 				$hash[$property.Name] = ConvertTo-Hashtable -InputObject $property.Value
 			}
 			$hash
-		}
-		else
-		{
+		} else {
 			## If the object isn't an array, collection, or other object, it's already a hash table
 			## So just return it.
 			$InputObject
@@ -730,23 +622,19 @@ function ConvertTo-Hashtable
 	}
 }
 
-function Install-MsiFile
-{
+function Install-MsiFile {
 	param
 	(
-		[ValidateScript({ test-path $_ })]
+		[ValidateScript( { Test-Path $_ })]
 		$File
 	)
 	
-	try
-	{
+	try {
 		$File = Get-Item $File -ErrorAction Stop
-	}
-	Catch
-	{
+	} Catch {
 		
 	}
-	$DataStamp = get-date -Format yyyyMMddTHHmmss
+	$DataStamp = Get-Date -Format yyyyMMddTHHmmss
 	$logFile = '{0}-{1}.log' -f $file.fullname, $DataStamp
 	$MSIArguments = @(
 		"/i"
@@ -759,4 +647,9 @@ function Install-MsiFile
 	Start-Process "msiexec.exe" -ArgumentList $MSIArguments -Wait -NoNewWindow
 }
 
-Export-ModuleMember -Function Get-DownloadFile, Write-Log, LMTPing, Get-PublicIP, Get-LMTPingStatistics, Repair-LemontreeFolders, Join-Parts, Verify-FileAgeNotOlderThen, Write-EventLogLemontree, Write-LemontreeError, ConvertTo-Hashtable
+function Install-Chocolatey {
+	Set-ExecutionPolicy Bypass -Scope Process -Force; 
+	Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+}
+
+Export-ModuleMember -Function Get-DownloadFile, Write-Log, LMTPing, Get-PublicIP, Get-LMTPingStatistics, Repair-LemontreeFolders, Join-Parts, Verify-FileAgeNotOlderThen, Write-EventLogLemontree, Write-LemontreeError, ConvertTo-Hashtable, Install-Chocolatey
